@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>My Dinosaur Library</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="container">
+        <h1>My Dino Library</h1>
+        <div class="nav-links">
+            <a href="index.html">Create</a>
+            <a href="library.html" class="active">My Dinos</a>
+            <a href="game.html">Game</a>
+        </div>
+        
+        <div id="library-container" class="dino-library">
+            <!-- Dinosaurs will be loaded dynamically here -->
+        </div>
+        
+        <div class="button-container" style="margin-top: 30px;">
+            <button id="clear-library-btn">Clear Library</button>
+        </div>
+    </div>
+    
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const libraryContainer = document.getElementById('library-container');
+            const clearBtn = document.getElementById('clear-library-btn');
+            
+            // Load saved dinosaurs
+            loadLibrary();
+            
+            // Add event listener for clearing the library
+            clearBtn.addEventListener('click', function() {
+                if (confirm('Are you sure you want to delete all saved dinosaurs?')) {
+                    localStorage.removeItem('savedDinos');
+                    loadLibrary();
+                }
+            });
+            
+            // Function to load the library
+            function loadLibrary() {
+                const savedDinos = JSON.parse(localStorage.getItem('savedDinos')) || [];
+                
+                // Clear the container
+                libraryContainer.innerHTML = '';
+                
+                if (savedDinos.length === 0) {
+                    // Show message if library is empty
+                    libraryContainer.innerHTML = `
+                        <div class="empty-library">
+                            <h3>Your dinosaur library is empty</h3>
+                            <p>Go to the Create page to make and save some dinosaurs!</p>
+                        </div>
+                    `;
+                    return;
+                }
+                
+                // Add each dinosaur to the library
+                savedDinos.forEach(dino => {
+                    const dinoElement = document.createElement('div');
+                    dinoElement.className = 'library-item';
+                    dinoElement.innerHTML = `
+                        <img src="${dino.image}" alt="${dino.name}">
+                        <div class="library-item-info">
+                            <h3>${dino.name}</h3>
+                            <p>${dino.description}</p>
+                            <small>Created: ${dino.date}</small>
+                        </div>
+                        <button class="delete-btn" data-id="${dino.id}">Delete</button>
+                    `;
+                    
+                    libraryContainer.appendChild(dinoElement);
+                });
+                
+                // Add event listeners to delete buttons
+                document.querySelectorAll('.delete-btn').forEach(btn => {
+                    btn.addEventListener('click', function() {
+                        const dinoId = parseInt(this.getAttribute('data-id'));
+                        deleteDino(dinoId);
+                    });
+                });
+            }
+            
+            // Function to delete a dinosaur
+            function deleteDino(id) {
+                let savedDinos = JSON.parse(localStorage.getItem('savedDinos')) || [];
+                
+                // Filter out the dinosaur with the given ID
+                savedDinos = savedDinos.filter(dino => dino.id !== id);
+                
+                // Save the updated list back to localStorage
+                localStorage.setItem('savedDinos', JSON.stringify(savedDinos));
+                
+                // Reload the library
+                loadLibrary();
+            }
+        });
+    </script>
+    
+    <style>
+        #clear-library-btn {
+            padding: 12px 24px;
+            background-color: #e74c3c;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            font-size: 16px;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+        }
+        
+        #clear-library-btn:hover {
+            background-color: #c0392b;
+        }
+    </style>
+</body>
+</html> 
