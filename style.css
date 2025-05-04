@@ -1,0 +1,275 @@
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: 'Arial', sans-serif;
+    background-color: #f0f7ff;
+    color: #333;
+    line-height: 1.6;
+}
+
+.container {
+    max-width: 800px;
+    margin: 0 auto;
+    padding: 20px;
+    text-align: center;
+}
+
+h1 {
+    color: #2c3e50;
+    margin-bottom: 30px;
+    font-size: 2.5rem;
+}
+
+.dino-container {
+    height: 300px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    margin-bottom: 20px;
+    position: relative;
+}
+
+.dinosaur {
+    position: relative;
+    height: 200px;
+    width: 300px;
+}
+
+.dino-head {
+    position: absolute;
+    width: 80px;
+    height: 70px;
+    background-color: #27ae60;
+    border-radius: 50% 50% 50% 50% / 60% 60% 40% 40%;
+    top: 20px;
+    left: 200px;
+    z-index: 2;
+}
+
+.dino-eye {
+    position: absolute;
+    width: 15px;
+    height: 15px;
+    background-color: white;
+    border-radius: 50%;
+    top: 15px;
+}
+
+.dino-eye:first-child {
+    left: 15px;
+}
+
+.dino-eye:nth-child(2) {
+    left: 45px;
+}
+
+.dino-eye::after {
+    content: "";
+    position: absolute;
+    width: 7px;
+    height: 7px;
+    background-color: black;
+    border-radius: 50%;
+    top: 4px;
+    left: 4px;
+}
+
+.dino-mouth {
+    position: absolute;
+    width: 30px;
+    height: 10px;
+    background-color: #e74c3c;
+    border-radius: 0 0 10px 10px;
+    bottom: 15px;
+    left: 25px;
+}
+
+.dino-body {
+    position: absolute;
+    width: 140px;
+    height: 80px;
+    background-color: #27ae60;
+    border-radius: 50px;
+    top: 70px;
+    left: 80px;
+    z-index: 1;
+}
+
+.dino-legs {
+    position: absolute;
+    bottom: 0;
+    left: 100px;
+    width: 100px;
+}
+
+.dino-leg {
+    position: absolute;
+    width: 15px;
+    height: 60px;
+    background-color: #27ae60;
+    border-radius: 5px;
+}
+
+.dino-leg:first-child {
+    left: 20px;
+}
+
+.dino-leg:nth-child(2) {
+    left: 65px;
+}
+
+.dino-tail {
+    position: absolute;
+    width: 80px;
+    height: 15px;
+    background-color: #27ae60;
+    border-radius: 0 10px 10px 0;
+    top: 100px;
+    left: 20px;
+}
+
+.dino-feature {
+    position: absolute;
+    opacity: 0;
+    transition: all 0.3s ease;
+}
+
+.dino-info {
+    margin-bottom: 30px;
+    padding: 15px;
+    background-color: white;
+    border-radius: 10px;
+    box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+}
+
+#dino-name {
+    color: #3498db;
+    margin-bottom: 10px;
+}
+
+#generate-btn {
+    padding: 12px 24px;
+    background-color: #3498db;
+    color: white;
+    border: none;
+    border-radius: 5px;
+    font-size: 16px;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+}
+
+#generate-btn:hover {
+    background-color: #2980b9;
+}
+
+/* Features that can be added to dinosaurs */
+.spikes {
+    width: 60px;
+    height: 20px;
+    top: 60px;
+    left: 110px;
+    z-index: 3;
+    display: flex;
+    justify-content: space-between;
+}
+
+.spikes::before,
+.spikes::after,
+.spikes span {
+    content: "";
+    width: 10px;
+    height: 20px;
+    background-color: #e67e22;
+    border-radius: 5px 5px 0 0;
+}
+
+.horns {
+    width: 40px;
+    height: 25px;
+    top: 5px;
+    left: 220px;
+    z-index: 3;
+    display: flex;
+    justify-content: space-between;
+}
+
+.horns::before,
+.horns::after {
+    content: "";
+    width: 8px;
+    height: 25px;
+    background-color: #8e44ad;
+    border-radius: 5px 5px 0 0;
+    transform: rotate(-20deg);
+}
+
+.horns::after {
+    transform: rotate(20deg);
+}
+
+.wings {
+    width: 40px;
+    height: 60px;
+    top: 50px;
+    left: 120px;
+    z-index: 0;
+    background-color: #3498db;
+    opacity: 0.7;
+    border-radius: 50% 50% 0 50%;
+    transform: rotate(-20deg);
+}
+
+.wings::after {
+    content: "";
+    position: absolute;
+    width: 40px;
+    height: 60px;
+    background-color: #3498db;
+    opacity: 0.7;
+    border-radius: 50% 50% 50% 0;
+    transform: scaleX(-1) rotate(-20deg);
+    left: 60px;
+}
+
+.armor {
+    width: 120px;
+    height: 40px;
+    top: 60px;
+    left: 90px;
+    z-index: 2;
+    display: flex;
+    justify-content: space-between;
+}
+
+.armor::before,
+.armor::after,
+.armor span {
+    content: "";
+    width: 25px;
+    height: 25px;
+    background-color: #95a5a6;
+    border-radius: 50%;
+}
+
+.long-neck {
+    width: 20px;
+    height: 80px;
+    background-color: #27ae60;
+    top: 20px;
+    left: 190px;
+    z-index: 1;
+    border-radius: 10px;
+}
+
+/* Colors for dinosaurs */
+.green { background-color: #27ae60; }
+.blue { background-color: #3498db; }
+.purple { background-color: #9b59b6; }
+.orange { background-color: #e67e22; }
+.red { background-color: #e74c3c; }
+.yellow { background-color: #f1c40f; }
+.cyan { background-color: #1abc9c; } 
