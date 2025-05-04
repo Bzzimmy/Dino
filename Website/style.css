@@ -383,4 +383,75 @@ h1 {
 
 .delete-btn:hover {
     background-color: #c0392b;
+}
+
+/* Mobile responsiveness */
+@media (max-width: 768px) {
+    .container {
+        padding: 15px 10px;
+    }
+    
+    h1 {
+        font-size: 2rem;
+        margin-bottom: 20px;
+    }
+    
+    .nav-links {
+        flex-wrap: wrap;
+    }
+    
+    .nav-links a {
+        margin: 5px;
+        padding: 8px 15px;
+        font-size: 14px;
+    }
+    
+    .dino-container {
+        height: 250px;
+    }
+    
+    .button-container {
+        flex-direction: column;
+        gap: 10px;
+    }
+    
+    #generate-btn, #save-btn, #clear-library-btn, #restart-btn {
+        width: 100%;
+        padding: 15px;
+        font-size: 16px;
+    }
+    
+    .dino-info {
+        padding: 10px;
+    }
+    
+    .dino-library {
+        grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+    }
+    
+    /* Game specific mobile styles */
+    #dino-selection {
+        padding: 10px;
+    }
+    
+    #selection-container {
+        gap: 8px;
+    }
+    
+    .dino-option {
+        width: 80px;
+        padding: 8px;
+    }
+    
+    .dino-preview {
+        width: 60px;
+        height: 60px;
+    }
+    
+    #game-message {
+        font-size: 16px;
+        padding: 10px 15px;
+        width: 80%;
+        text-align: center;
+    }
 } 
