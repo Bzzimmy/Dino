@@ -5,10 +5,16 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Dinosaur Generator</title>
     <link rel="stylesheet" href="style.css">
+    <script src="https://html2canvas.hertzen.com/dist/html2canvas.min.js"></script>
 </head>
 <body>
     <div class="container">
         <h1>Dino Creator</h1>
+        <div class="nav-links">
+            <a href="index.html" class="active">Create</a>
+            <a href="library.html">My Dinos</a>
+            <a href="game.html">Game</a>
+        </div>
         <div class="dino-container">
             <div id="dinosaur" class="dinosaur">
                 <div class="dino-head">
@@ -30,7 +36,10 @@
             <h2 id="dino-name">Your Dinosaur</h2>
             <p id="dino-description">Click the button to generate a new dinosaur!</p>
         </div>
-        <button id="generate-btn">Generate New Dinosaur</button>
+        <div class="button-container">
+            <button id="generate-btn">Generate New Dinosaur</button>
+            <button id="save-btn">Save Dinosaur</button>
+        </div>
     </div>
     <script src="script.js"></script>
 </body>
