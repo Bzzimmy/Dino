@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Dino Runner Game</title>
     <link rel="stylesheet" href="style.css">
 </head>
@@ -16,11 +16,14 @@
         </div>
         
         <div id="game-container">
-            <div id="game-message">Press SPACE to start</div>
+            <div id="game-message">Tap or press SPACE to start</div>
             <div id="score">0</div>
             <div id="game-area">
                 <div id="player"></div>
                 <div id="ground"></div>
+            </div>
+            <div id="mobile-controls">
+                <div id="jump-button">JUMP</div>
             </div>
         </div>
         
@@ -43,31 +46,48 @@
             const gameMessage = document.getElementById('game-message');
             const restartBtn = document.getElementById('restart-btn');
             const selectionContainer = document.getElementById('selection-container');
+            const jumpButton = document.getElementById('jump-button');
             
             // Game variables
             let isJumping = false;
             let isGameOver = true;
             let score = 0;
-            let gameSpeed = 5;
+            let gameSpeed = 5; // Reduced from 6 to make game easier
             let obstacles = [];
             let gameInterval;
             let selectedDinoImage = null;
             let jumpTimer = null;
             let jumpPosition = 0;
             let jumpVelocity = 0;
-            let gravity = 0.5;
+            let gravity = 0.5; // Lower gravity value
+            let isMobile = window.innerWidth <= 768;
+            
+            // Check if there's a pre-selected dino from the library
+            checkForSelectedDino();
             
             // Load saved dinosaurs for selection
             loadDinoSelection();
             
             // Default player appearance
-            player.style.backgroundImage = 'url("data:image/svg+xml;utf8,<svg xmlns=\'http://www.w3.org/2000/svg\' width=\'50\' height=\'50\'><rect width=\'50\' height=\'50\' fill=\'%2327ae60\'/></svg>")';
+            if (!selectedDinoImage) {
+                player.style.backgroundImage = 'url("data:image/svg+xml;utf8,<svg xmlns=\'http://www.w3.org/2000/svg\' width=\'50\' height=\'50\'><rect width=\'50\' height=\'50\' fill=\'%2327ae60\'/></svg>")';
+            }
             
             // Listen for key presses
             document.addEventListener('keydown', handleKeyDown);
             
             // Restart button
             restartBtn.addEventListener('click', resetGame);
+            
+            // Mobile jump button
+            jumpButton.addEventListener('touchstart', function(e) {
+                if (isGameOver) {
+                    startGame();
+                } else if (!isJumping) {
+                    jump();
+                }
+                e.preventDefault();
+            });
             
             // Touch controls for mobile
             gameArea.addEventListener('touchstart', function(e) {
@@ -78,6 +98,30 @@
                 }
                 e.preventDefault();
             });
+            
+            // Handle window resize
+            window.addEventListener('resize', function() {
+                isMobile = window.innerWidth <= 768;
+                updateMobileElements();
+            });
+            
+            function updateMobileElements() {
+                document.getElementById('mobile-controls').style.display = isMobile ? 'block' : 'none';
+            }
+            
+            // Initialize mobile elements
+            updateMobileElements();
+            
+            function checkForSelectedDino() {
+                const selectedDino = localStorage.getItem('selectedGameDino');
+                if (selectedDino) {
+                    const dino = JSON.parse(selectedDino);
+                    selectedDinoImage = dino.image;
+                    player.style.backgroundImage = `url('${dino.image}')`;
+                    // Clear the selection after using it
+                    localStorage.removeItem('selectedGameDino');
+                }
+            }
             
             function loadDinoSelection() {
                 const savedDinos = JSON.parse(localStorage.getItem('savedDinos')) || [];
@@ -105,6 +149,10 @@
                 savedDinos.forEach(dino => {
                     const option = document.createElement('div');
                     option.className = 'dino-option';
+                    if (selectedDinoImage === dino.image) {
+                        option.classList.add('selected');
+                        defaultOption.classList.remove('selected');
+                    }
                     option.innerHTML = `
                         <div class="dino-preview" style="background-image: url('${dino.image}')"></div>
                         <p>${dino.name}</p>
@@ -146,7 +194,7 @@
                 gameInterval = setInterval(updateGame, 20);
                 
                 // Start creating obstacles
-                setTimeout(createObstacle, 2000);
+                setTimeout(createObstacle, 2000); // Give player more time at start
             }
             
             function resetGame() {
@@ -157,7 +205,7 @@
                 jumpPosition = 0;
                 player.style.bottom = '20px';
                 gameMessage.style.display = 'block';
-                gameMessage.textContent = 'Press SPACE to start';
+                gameMessage.textContent = 'Tap or press SPACE to start';
                 scoreElement.textContent = '0';
                 
                 // Clear existing obstacles
@@ -168,15 +216,19 @@
                 if (isJumping) return;
                 
                 isJumping = true;
-                jumpVelocity = 15;
+                jumpVelocity = 15; // Initial upward velocity
                 
                 if (jumpTimer) clearInterval(jumpTimer);
                 
+                // Use a physics-based jump instead of CSS animation
                 jumpTimer = setInterval(() => {
+                    // Apply gravity to velocity
                     jumpVelocity -= gravity;
                     
+                    // Update position based on velocity
                     jumpPosition += jumpVelocity;
                     
+                    // Don't go below ground
                     if (jumpPosition <= 0) {
                         jumpPosition = 0;
                         jumpVelocity = 0;
@@ -184,6 +236,7 @@
                         clearInterval(jumpTimer);
                     }
                     
+                    // Apply position
                     player.style.bottom = (20 + jumpPosition) + 'px';
                 }, 20);
             }
@@ -348,6 +401,33 @@
             z-index: 10;
         }
         
+        #mobile-controls {
+            position: absolute;
+            bottom: 30px;
+            right: 20px;
+            z-index: 10;
+            display: none; /* Will be shown on mobile */
+        }
+        
+        #jump-button {
+            width: 80px;
+            height: 80px;
+            background-color: rgba(52, 152, 219, 0.7);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: bold;
+            user-select: none;
+            -webkit-user-select: none;
+            font-size: 16px;
+        }
+        
+        #jump-button:active {
+            background-color: rgba(41, 128, 185, 0.9);
+        }
+        
         #restart-btn {
             padding: 12px 24px;
             background-color: #3498db;
@@ -407,6 +487,22 @@
         
         .default-dino {
             background-color: #27ae60;
+        }
+        
+        /* Additional mobile specific styles */
+        @media (max-width: 768px) {
+            #game-container {
+                height: 250px; 
+                touch-action: none;
+            }
+            
+            #player {
+                left: 30px;
+            }
+            
+            .obstacle {
+                width: 25px;
+            }
         }
     </style>
 </body>
