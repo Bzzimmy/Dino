@@ -52,15 +52,16 @@
             let isJumping = false;
             let isGameOver = true;
             let score = 0;
-            let gameSpeed = 5; // Reduced from 6 to make game easier
+            let gameSpeed = 5;
             let obstacles = [];
             let gameInterval;
             let selectedDinoImage = null;
             let jumpTimer = null;
             let jumpPosition = 0;
             let jumpVelocity = 0;
-            let gravity = 0.5; // Lower gravity value
+            let gravity = 0.5;
             let isMobile = window.innerWidth <= 768;
+            let isButtonHeld = false;
             
             // Check if there's a pre-selected dino from the library
             checkForSelectedDino();
@@ -73,29 +74,55 @@
                 player.style.backgroundImage = 'url("data:image/svg+xml;utf8,<svg xmlns=\'http://www.w3.org/2000/svg\' width=\'50\' height=\'50\'><rect width=\'50\' height=\'50\' fill=\'%2327ae60\'/></svg>")';
             }
             
-            // Listen for key presses
-            document.addEventListener('keydown', handleKeyDown);
+            // Listen for key presses and releases
+            document.addEventListener('keydown', function(e) {
+                if (e.code === 'Space') {
+                    if (isGameOver) {
+                        startGame();
+                    } else {
+                        isButtonHeld = true;
+                    }
+                    e.preventDefault();
+                }
+            });
+            
+            document.addEventListener('keyup', function(e) {
+                if (e.code === 'Space') {
+                    isButtonHeld = false;
+                    e.preventDefault();
+                }
+            });
             
             // Restart button
             restartBtn.addEventListener('click', resetGame);
             
-            // Mobile jump button
+            // Mobile jump button events
             jumpButton.addEventListener('touchstart', function(e) {
                 if (isGameOver) {
                     startGame();
-                } else if (!isJumping) {
-                    jump();
+                } else {
+                    isButtonHeld = true;
                 }
                 e.preventDefault();
             });
             
-            // Touch controls for mobile
+            jumpButton.addEventListener('touchend', function(e) {
+                isButtonHeld = false;
+                e.preventDefault();
+            });
+            
+            // Touch controls for mobile - updated
             gameArea.addEventListener('touchstart', function(e) {
                 if (isGameOver) {
                     startGame();
-                } else if (!isJumping) {
-                    jump();
+                } else {
+                    isButtonHeld = true;
                 }
+                e.preventDefault();
+            });
+            
+            gameArea.addEventListener('touchend', function(e) {
+                isButtonHeld = false;
                 e.preventDefault();
             });
             
@@ -169,23 +196,13 @@
                 });
             }
             
-            function handleKeyDown(e) {
-                if (e.code === 'Space') {
-                    if (isGameOver) {
-                        startGame();
-                    } else if (!isJumping) {
-                        jump();
-                    }
-                    e.preventDefault();
-                }
-            }
-            
             function startGame() {
                 isGameOver = false;
                 score = 0;
                 obstacles = [];
                 gameSpeed = 5;
                 gameMessage.style.display = 'none';
+                isButtonHeld = false;
                 
                 // Clear existing obstacles
                 document.querySelectorAll('.obstacle').forEach(obs => obs.remove());
@@ -193,8 +210,12 @@
                 // Start game loop
                 gameInterval = setInterval(updateGame, 20);
                 
+                // Start flying physics
+                if (jumpTimer) clearInterval(jumpTimer);
+                jumpTimer = setInterval(updateJump, 20);
+                
                 // Start creating obstacles
-                setTimeout(createObstacle, 2000); // Give player more time at start
+                setTimeout(createObstacle, 2000);
             }
             
             function resetGame() {
@@ -202,6 +223,7 @@
                 if (jumpTimer) clearInterval(jumpTimer);
                 isGameOver = true;
                 isJumping = false;
+                isButtonHeld = false;
                 jumpPosition = 0;
                 player.style.bottom = '20px';
                 gameMessage.style.display = 'block';
@@ -212,33 +234,41 @@
                 document.querySelectorAll('.obstacle').forEach(obs => obs.remove());
             }
             
-            function jump() {
-                if (isJumping) return;
+            function updateJump() {
+                if (isGameOver) return;
                 
-                isJumping = true;
-                jumpVelocity = 15; // Initial upward velocity
-                
-                if (jumpTimer) clearInterval(jumpTimer);
-                
-                // Use a physics-based jump instead of CSS animation
-                jumpTimer = setInterval(() => {
-                    // Apply gravity to velocity
+                if (isButtonHeld) {
+                    // Apply upward thrust when button is held
+                    jumpVelocity = 2.5;
+                } else {
+                    // Apply gravity when button is not held
                     jumpVelocity -= gravity;
-                    
-                    // Update position based on velocity
-                    jumpPosition += jumpVelocity;
-                    
-                    // Don't go below ground
-                    if (jumpPosition <= 0) {
-                        jumpPosition = 0;
-                        jumpVelocity = 0;
-                        isJumping = false;
-                        clearInterval(jumpTimer);
-                    }
-                    
-                    // Apply position
-                    player.style.bottom = (20 + jumpPosition) + 'px';
-                }, 20);
+                }
+                
+                // Update position based on velocity
+                jumpPosition += jumpVelocity;
+                
+                // Don't go below ground
+                if (jumpPosition <= 0) {
+                    jumpPosition = 0;
+                    jumpVelocity = 0;
+                }
+                
+                // Don't go too high (optional ceiling limit)
+                if (jumpPosition >= 220) {
+                    jumpPosition = 220;
+                    jumpVelocity = 0;
+                }
+                
+                // Apply position and animation
+                player.style.bottom = (20 + jumpPosition) + 'px';
+                
+                // Add flying animation when button is held
+                if (isButtonHeld && jumpPosition > 0) {
+                    player.classList.add('flying');
+                } else {
+                    player.classList.remove('flying');
+                }
             }
             
             function createObstacle() {
@@ -326,6 +356,7 @@
                 clearInterval(gameInterval);
                 if (jumpTimer) clearInterval(jumpTimer);
                 isGameOver = true;
+                isButtonHeld = false;
                 gameMessage.style.display = 'block';
                 gameMessage.textContent = `Game Over! Score: ${Math.floor(score / 5)}`;
             }
@@ -399,6 +430,9 @@
             font-size: 20px;
             font-weight: bold;
             z-index: 10;
+            text-align: center;
+            width: 70%;
+            max-width: 350px;
         }
         
         #mobile-controls {
@@ -503,6 +537,18 @@
             .obstacle {
                 width: 25px;
             }
+        }
+        
+        /* Add flying animation */
+        @keyframes fly {
+            0% { transform: rotate(0deg); }
+            25% { transform: rotate(-5deg); }
+            75% { transform: rotate(5deg); }
+            100% { transform: rotate(0deg); }
+        }
+        
+        .flying {
+            animation: fly 0.5s infinite;
         }
     </style>
 </body>
