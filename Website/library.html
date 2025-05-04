@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>My Dinosaur Library</title>
     <link rel="stylesheet" href="style.css">
 </head>
@@ -71,6 +71,15 @@
                         </div>
                         <button class="delete-btn" data-id="${dino.id}">Delete</button>
                     `;
+                    
+                    // Add tap to use in game functionality for mobile
+                    dinoElement.querySelector('img').addEventListener('click', function() {
+                        if (confirm(`Use ${dino.name} in the game?`)) {
+                            // Store selected dino in localStorage and navigate to game
+                            localStorage.setItem('selectedGameDino', JSON.stringify(dino));
+                            window.location.href = 'game.html';
+                        }
+                    });
                     
                     libraryContainer.appendChild(dinoElement);
                 });
