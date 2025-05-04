@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Dinosaur Generator</title>
     <link rel="stylesheet" href="style.css">
     <script src="https://html2canvas.hertzen.com/dist/html2canvas.min.js"></script>
@@ -42,5 +42,16 @@
         </div>
     </div>
     <script src="script.js"></script>
+    <script>
+        // Add mobile double-tap handler for generating dinos
+        document.addEventListener('DOMContentLoaded', function() {
+            // For mobile: add tap on dinosaur to generate new one
+            const dinoContainer = document.querySelector('.dino-container');
+            dinoContainer.addEventListener('touchend', function(e) {
+                document.getElementById('generate-btn').click();
+                e.preventDefault();
+            });
+        });
+    </script>
 </body>
 </html> 
