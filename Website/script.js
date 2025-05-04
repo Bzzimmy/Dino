@@ -1,10 +1,20 @@
 document.addEventListener('DOMContentLoaded', function() {
     const generateBtn = document.getElementById('generate-btn');
+    const saveBtn = document.getElementById('save-btn');
+    
     generateBtn.addEventListener('click', generateDinosaur);
+    saveBtn.addEventListener('click', saveDinosaur);
     
     // Generate a dinosaur when the page loads
     generateDinosaur();
 });
+
+// Current dinosaur data
+let currentDino = {
+    name: '',
+    description: '',
+    image: null
+};
 
 function generateDinosaur() {
     // Reset previous dinosaur
@@ -23,6 +33,44 @@ function generateDinosaur() {
     // Update dinosaur info
     document.getElementById('dino-name').textContent = dinoName;
     document.getElementById('dino-description').textContent = dinoDescription;
+    
+    // Store current dinosaur data
+    currentDino.name = dinoName;
+    currentDino.description = dinoDescription;
+}
+
+function saveDinosaur() {
+    const dinoContainer = document.querySelector('.dino-container');
+    const dinoElement = document.getElementById('dinosaur');
+    
+    // Use html2canvas to capture the dinosaur as an image
+    html2canvas(dinoContainer).then(canvas => {
+        // Convert the canvas to a data URL
+        const imageData = canvas.toDataURL('image/png');
+        
+        // Save the dinosaur to localStorage
+        saveDinoToStorage({
+            id: Date.now(),
+            name: currentDino.name,
+            description: document.getElementById('dino-description').textContent,
+            image: imageData,
+            date: new Date().toLocaleDateString()
+        });
+        
+        // Show success message
+        alert('Dinosaur saved to your library!');
+    });
+}
+
+function saveDinoToStorage(dino) {
+    // Get current saved dinosaurs from localStorage
+    let savedDinos = JSON.parse(localStorage.getItem('savedDinos')) || [];
+    
+    // Add the new dinosaur
+    savedDinos.push(dino);
+    
+    // Save back to localStorage
+    localStorage.setItem('savedDinos', JSON.stringify(savedDinos));
 }
 
 function resetDinosaur() {
@@ -108,6 +156,11 @@ function applyFeatures(features) {
 }
 
 function generateDinoName() {
+    // 1 in 10 chance to name the dinosaur Ben or Wyatt
+    if (Math.random() < 0.1) {
+        return Math.random() < 0.5 ? "Ben" : "Wyatt";
+    }
+    
     const prefixes = ['Mega', 'Ultra', 'Super', 'Giga', 'Hyper', 'Neo', 'Techno', 'Quantum', 'Cyber', 'Fusion'];
     const roots = ['rex', 'raptor', 'saur', 'dactyl', 'ceratops', 'titan', 'don', 'stego', 'pod', 'tops'];
     const suffixes = ['us', 'ius', 'or', 'ax', 'on', 'osaurus', 'otron', 'inator', 'atron', 'oid'];
