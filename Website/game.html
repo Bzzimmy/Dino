@@ -1,0 +1,413 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dino Runner Game</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="container">
+        <h1>Dino Runner</h1>
+        <div class="nav-links">
+            <a href="index.html">Create</a>
+            <a href="library.html">My Dinos</a>
+            <a href="game.html" class="active">Game</a>
+        </div>
+        
+        <div id="game-container">
+            <div id="game-message">Press SPACE to start</div>
+            <div id="score">0</div>
+            <div id="game-area">
+                <div id="player"></div>
+                <div id="ground"></div>
+            </div>
+        </div>
+        
+        <div id="dino-selection">
+            <h3>Select Your Dino</h3>
+            <div id="selection-container"></div>
+        </div>
+        
+        <div class="button-container" style="margin-top: 30px;">
+            <button id="restart-btn">Restart Game</button>
+        </div>
+    </div>
+    
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // Game elements
+            const gameArea = document.getElementById('game-area');
+            const player = document.getElementById('player');
+            const scoreElement = document.getElementById('score');
+            const gameMessage = document.getElementById('game-message');
+            const restartBtn = document.getElementById('restart-btn');
+            const selectionContainer = document.getElementById('selection-container');
+            
+            // Game variables
+            let isJumping = false;
+            let isGameOver = true;
+            let score = 0;
+            let gameSpeed = 5;
+            let obstacles = [];
+            let gameInterval;
+            let selectedDinoImage = null;
+            let jumpTimer = null;
+            let jumpPosition = 0;
+            let jumpVelocity = 0;
+            let gravity = 0.5;
+            
+            // Load saved dinosaurs for selection
+            loadDinoSelection();
+            
+            // Default player appearance
+            player.style.backgroundImage = 'url("data:image/svg+xml;utf8,<svg xmlns=\'http://www.w3.org/2000/svg\' width=\'50\' height=\'50\'><rect width=\'50\' height=\'50\' fill=\'%2327ae60\'/></svg>")';
+            
+            // Listen for key presses
+            document.addEventListener('keydown', handleKeyDown);
+            
+            // Restart button
+            restartBtn.addEventListener('click', resetGame);
+            
+            // Touch controls for mobile
+            gameArea.addEventListener('touchstart', function(e) {
+                if (isGameOver) {
+                    startGame();
+                } else if (!isJumping) {
+                    jump();
+                }
+                e.preventDefault();
+            });
+            
+            function loadDinoSelection() {
+                const savedDinos = JSON.parse(localStorage.getItem('savedDinos')) || [];
+                
+                if (savedDinos.length === 0) {
+                    selectionContainer.innerHTML = "<p>No saved dinosaurs found! Go to Create page to make some.</p>";
+                    return;
+                }
+                
+                selectionContainer.innerHTML = "";
+                
+                // Add default dino option
+                const defaultOption = document.createElement('div');
+                defaultOption.className = 'dino-option selected';
+                defaultOption.innerHTML = '<div class="dino-preview default-dino"></div><p>Default</p>';
+                defaultOption.addEventListener('click', function() {
+                    document.querySelectorAll('.dino-option').forEach(opt => opt.classList.remove('selected'));
+                    this.classList.add('selected');
+                    selectedDinoImage = null;
+                    player.style.backgroundImage = 'url("data:image/svg+xml;utf8,<svg xmlns=\'http://www.w3.org/2000/svg\' width=\'50\' height=\'50\'><rect width=\'50\' height=\'50\' fill=\'%2327ae60\'/></svg>")';
+                });
+                selectionContainer.appendChild(defaultOption);
+                
+                // Add each saved dino as an option
+                savedDinos.forEach(dino => {
+                    const option = document.createElement('div');
+                    option.className = 'dino-option';
+                    option.innerHTML = `
+                        <div class="dino-preview" style="background-image: url('${dino.image}')"></div>
+                        <p>${dino.name}</p>
+                    `;
+                    
+                    option.addEventListener('click', function() {
+                        document.querySelectorAll('.dino-option').forEach(opt => opt.classList.remove('selected'));
+                        this.classList.add('selected');
+                        selectedDinoImage = dino.image;
+                        player.style.backgroundImage = `url('${dino.image}')`;
+                    });
+                    
+                    selectionContainer.appendChild(option);
+                });
+            }
+            
+            function handleKeyDown(e) {
+                if (e.code === 'Space') {
+                    if (isGameOver) {
+                        startGame();
+                    } else if (!isJumping) {
+                        jump();
+                    }
+                    e.preventDefault();
+                }
+            }
+            
+            function startGame() {
+                isGameOver = false;
+                score = 0;
+                obstacles = [];
+                gameSpeed = 5;
+                gameMessage.style.display = 'none';
+                
+                // Clear existing obstacles
+                document.querySelectorAll('.obstacle').forEach(obs => obs.remove());
+                
+                // Start game loop
+                gameInterval = setInterval(updateGame, 20);
+                
+                // Start creating obstacles
+                setTimeout(createObstacle, 2000);
+            }
+            
+            function resetGame() {
+                clearInterval(gameInterval);
+                if (jumpTimer) clearInterval(jumpTimer);
+                isGameOver = true;
+                isJumping = false;
+                jumpPosition = 0;
+                player.style.bottom = '20px';
+                gameMessage.style.display = 'block';
+                gameMessage.textContent = 'Press SPACE to start';
+                scoreElement.textContent = '0';
+                
+                // Clear existing obstacles
+                document.querySelectorAll('.obstacle').forEach(obs => obs.remove());
+            }
+            
+            function jump() {
+                if (isJumping) return;
+                
+                isJumping = true;
+                jumpVelocity = 15;
+                
+                if (jumpTimer) clearInterval(jumpTimer);
+                
+                jumpTimer = setInterval(() => {
+                    jumpVelocity -= gravity;
+                    
+                    jumpPosition += jumpVelocity;
+                    
+                    if (jumpPosition <= 0) {
+                        jumpPosition = 0;
+                        jumpVelocity = 0;
+                        isJumping = false;
+                        clearInterval(jumpTimer);
+                    }
+                    
+                    player.style.bottom = (20 + jumpPosition) + 'px';
+                }, 20);
+            }
+            
+            function createObstacle() {
+                if (isGameOver) return;
+                
+                // Create obstacle
+                const obstacle = document.createElement('div');
+                obstacle.className = 'obstacle';
+                gameArea.appendChild(obstacle);
+                
+                // Set random height for obstacle - making them shorter to be easier to jump over
+                const height = 15 + Math.random() * 30;
+                obstacle.style.height = `${height}px`;
+                
+                // Start at right side of game area
+                obstacle.style.left = '100%';
+                
+                // Add to obstacles array
+                obstacles.push({
+                    element: obstacle,
+                    position: 100
+                });
+                
+                // Schedule next obstacle - making them spaced further apart
+                const delay = 2000 + Math.random() * 3000;
+                setTimeout(createObstacle, delay);
+            }
+            
+            function updateGame() {
+                if (isGameOver) return;
+                
+                // Update score
+                score++;
+                scoreElement.textContent = Math.floor(score / 5);
+                
+                // Increase game speed gradually but cap it lower than before
+                if (score % 500 === 0 && gameSpeed < 8) {
+                    gameSpeed += 0.2;
+                }
+                
+                // Move obstacles
+                for (let i = 0; i < obstacles.length; i++) {
+                    const obstacle = obstacles[i];
+                    obstacle.position -= gameSpeed / 10;
+                    
+                    // Update obstacle position
+                    obstacle.element.style.left = `${obstacle.position}%`;
+                    
+                    // Check for collision
+                    if (isCollision(player, obstacle.element)) {
+                        gameOver();
+                        return;
+                    }
+                    
+                    // Remove obstacle if it's off-screen
+                    if (obstacle.position < -10) {
+                        obstacle.element.remove();
+                        obstacles.splice(i, 1);
+                        i--;
+                    }
+                }
+            }
+            
+            function isCollision(player, obstacle) {
+                const playerRect = player.getBoundingClientRect();
+                const obstacleRect = obstacle.getBoundingClientRect();
+                
+                // Making the collision detection more forgiving by reducing the effective player size
+                const adjustedPlayerRect = {
+                    left: playerRect.left + 20,
+                    right: playerRect.right - 20,
+                    top: playerRect.top + 20,
+                    bottom: playerRect.bottom - 5
+                };
+                
+                return !(
+                    adjustedPlayerRect.right < obstacleRect.left ||
+                    adjustedPlayerRect.left > obstacleRect.right ||
+                    adjustedPlayerRect.bottom < obstacleRect.top ||
+                    adjustedPlayerRect.top > obstacleRect.bottom
+                );
+            }
+            
+            function gameOver() {
+                clearInterval(gameInterval);
+                if (jumpTimer) clearInterval(jumpTimer);
+                isGameOver = true;
+                gameMessage.style.display = 'block';
+                gameMessage.textContent = `Game Over! Score: ${Math.floor(score / 5)}`;
+            }
+        });
+    </script>
+    
+    <style>
+        #game-container {
+            position: relative;
+            width: 100%;
+            height: 300px;
+            border: 2px solid #2c3e50;
+            border-radius: 10px;
+            margin: 20px 0;
+            overflow: hidden;
+            background-color: #f8f9fa;
+        }
+        
+        #game-area {
+            position: relative;
+            width: 100%;
+            height: 100%;
+        }
+        
+        #player {
+            position: absolute;
+            bottom: 20px;
+            left: 50px;
+            width: 100px;
+            height: 100px;
+            background-size: contain;
+            background-position: center;
+            background-repeat: no-repeat;
+            z-index: 2;
+            transition: bottom 0.05s linear;
+        }
+        
+        #ground {
+            position: absolute;
+            bottom: 0;
+            width: 100%;
+            height: 20px;
+            background-color: #2c3e50;
+        }
+        
+        .obstacle {
+            position: absolute;
+            bottom: 20px;
+            width: 35px;
+            background-color: #e74c3c;
+            border-radius: 5px 5px 0 0;
+        }
+        
+        #score {
+            position: absolute;
+            top: 10px;
+            right: 20px;
+            font-size: 24px;
+            color: #2c3e50;
+            font-weight: bold;
+        }
+        
+        #game-message {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background-color: rgba(255, 255, 255, 0.8);
+            padding: 15px 25px;
+            border-radius: 5px;
+            font-size: 20px;
+            font-weight: bold;
+            z-index: 10;
+        }
+        
+        #restart-btn {
+            padding: 12px 24px;
+            background-color: #3498db;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            font-size: 16px;
+            cursor: pointer;
+        }
+        
+        #restart-btn:hover {
+            background-color: #2980b9;
+        }
+        
+        #dino-selection {
+            margin: 20px 0;
+            padding: 15px;
+            background-color: white;
+            border-radius: 10px;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+        }
+        
+        #selection-container {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 15px;
+            margin-top: 15px;
+            justify-content: center;
+        }
+        
+        .dino-option {
+            width: 100px;
+            cursor: pointer;
+            padding: 10px;
+            border-radius: 8px;
+            transition: all 0.2s ease;
+            border: 2px solid transparent;
+        }
+        
+        .dino-option:hover {
+            background-color: #f1f9ff;
+        }
+        
+        .dino-option.selected {
+            background-color: #e1f0fe;
+            border-color: #3498db;
+        }
+        
+        .dino-preview {
+            width: 80px;
+            height: 80px;
+            margin: 0 auto;
+            background-size: contain;
+            background-position: center;
+            background-repeat: no-repeat;
+        }
+        
+        .default-dino {
+            background-color: #27ae60;
+        }
+    </style>
+</body>
+</html> 
